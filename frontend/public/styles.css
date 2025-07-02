@@ -132,6 +132,54 @@ ul#fileList li .file-type {
   font-weight: 500;
   letter-spacing: 0.5px;
 }
+/* Chat styles */
+.chat-container {
+  margin-top: 40px;
+  background: #f8fafc;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(60,64,67,0.06);
+  padding: 18px 16px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.chat-log {
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+.chat-message {
+  margin-bottom: 8px;
+}
+.chat-message.user {
+  color: #1a73e8;
+  font-weight: 500;
+}
+.chat-message.ai {
+  color: #202124;
+}
+.chat-form {
+  display: flex;
+  gap: 10px;
+}
+.chat-form input[type="text"] {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  font-size: 1rem;
+}
+.chat-form button {
+  padding: 8px 18px;
+  font-size: 1rem;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+}
 @media (max-width: 700px) {
   .container {
     padding: 18px 4vw;
