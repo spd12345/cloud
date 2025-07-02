@@ -91,39 +91,30 @@ document.getElementById('clearFilters').addEventListener('click', () => {
 // --- AI Chat Assistant ---
 function aiAnswer(question) {
   question = question.toLowerCase();
-  // Simple search intent
-  if (question.includes('search') || question.includes('find') || question.includes('show')) {
-    // Try to extract file name or type
-    let found = [];
-    // Search by file type
-    if (question.includes('image')) found = allFiles.filter(f => getFileType(f) === 'image');
-    else if (question.includes('pdf')) found = allFiles.filter(f => getFileType(f) === 'pdf');
-    else if (question.includes('doc')) found = allFiles.filter(f => getFileType(f) === 'doc');
-    else if (question.includes('other')) found = allFiles.filter(f => getFileType(f) === 'other');
-    // Search by file name
-    else {
-      // Try to extract a keyword after "search" or "find"
-      const match = question.match(/(?:search|find|show)\s+(.*)/);
-      if (match && match[1]) {
-        const keyword = match[1].trim();
-        found = allFiles.filter(f => f.toLowerCase().includes(keyword));
-      }
-    }
-    if (found.length === 0) return "No matching files found.";
-    // Return links to found files
-    return found.map(f =>
-      `<a href="${backendUrl}/uploads/${f}" target="_blank">${f.split('-').slice(1).join('-')}</a>`
-    ).join('<br>');
+  // Try to extract a keyword after "search", "find", or "show"
+  const match = question.match(/(?:search|find|show)\s*(.*)/);
+  let keyword = match && match[1] ? match[1].trim() : '';
+  let found = [];
+
+  // Search by file type if mentioned
+  if (question.includes('image')) found = allFiles.filter(f => getFileType(f) === 'image');
+  else if (question.includes('pdf')) found = allFiles.filter(f => getFileType(f) === 'pdf');
+  else if (question.includes('doc')) found = allFiles.filter(f => getFileType(f) === 'doc');
+  else if (question.includes('other')) found = allFiles.filter(f => getFileType(f) === 'other');
+  // If keyword is present, do a partial match (fuzzy search)
+  else if (keyword) {
+    found = allFiles.filter(f => f.toLowerCase().includes(keyword));
   }
-  // General info
-  if (question.includes('how many')) {
-    return `You have ${allFiles.length} files in your drive.`;
+  // If no keyword, but user typed search/find/show, show all files
+  else if (question.includes('search') || question.includes('find') || question.includes('show')) {
+    found = allFiles;
   }
-  if (question.includes('types')) {
-    const types = new Set(allFiles.map(getFileType));
-    return `File types present: ${Array.from(types).join(', ')}`;
-  }
-  return "I can help you search files by name or type. Try: 'Search report', 'Show images', or 'How many files?'.";
+
+  if (found.length === 0) return "No matching files found.";
+  // Return links to found files
+  return found.map(f =>
+    `<a href="${backendUrl}/uploads/${f}" target="_blank">${f.split('-').slice(1).join('-')}</a>`
+  ).join('<br>');
 }
 
 // Chat UI logic
