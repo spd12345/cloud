@@ -56,8 +56,13 @@ function renderFiles() {
     const dateStr = getFileDate(file);
     dateSpan.textContent = dateStr ? `Uploaded: ${dateStr}` : '';
 
+    const typeBadge = document.createElement('span');
+    typeBadge.className = 'file-type';
+    typeBadge.textContent = getFileType(file).toUpperCase();
+
     li.appendChild(link);
     li.appendChild(dateSpan);
+    li.appendChild(typeBadge);
     fileList.appendChild(li);
   });
 }
