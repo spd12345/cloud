@@ -1,4 +1,4 @@
-const backendUrl = 'http://localhost:3000';
+const backendUrl = 'https://cloud-dhr2.onrender.com';
 
 async function fetchFiles() {
   const res = await fetch(`${backendUrl}/files`);
