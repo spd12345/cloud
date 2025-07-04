@@ -29,18 +29,7 @@ function getFileDate(filename) {
   return isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }
 
-// Upload file to Firebase Storage
-document.getElementById('uploadForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const fileInput = document.getElementById('fileInput');
-  const file = fileInput.files[0];
-  if (!file) return;
-  const filename = Date.now() + '-' + file.name;
-  const storageRef = firebase.storage().ref('uploads/' + filename);
-  await storageRef.put(file);
-  fileInput.value = '';
-  fetchFiles();
-});
+
 
 // List files from Firebase Storage
 function fetchFiles() {
