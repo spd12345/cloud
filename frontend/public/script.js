@@ -88,50 +88,6 @@ document.getElementById('clearFilters').addEventListener('click', () => {
   renderFiles();
 });
 
-// --- AI Chat Assistant ---
-function aiAnswer(question) {
-  question = question.toLowerCase();
-  // Try to extract a keyword after "search", "find", or "show"
-  const match = question.match(/(?:search|find|show)\s*(.*)/);
-  let keyword = match && match[1] ? match[1].trim() : '';
-  let found = [];
-
-  // Search by file type if mentioned
-  if (question.includes('image')) found = allFiles.filter(f => getFileType(f) === 'image');
-  else if (question.includes('pdf')) found = allFiles.filter(f => getFileType(f) === 'pdf');
-  else if (question.includes('doc')) found = allFiles.filter(f => getFileType(f) === 'doc');
-  else if (question.includes('other')) found = allFiles.filter(f => getFileType(f) === 'other');
-  // If keyword is present, do a partial match (fuzzy search)
-  else if (keyword) {
-    found = allFiles.filter(f => f.toLowerCase().includes(keyword));
-  }
-  // If no keyword, but user typed search/find/show, show all files
-  else if (question.includes('search') || question.includes('find') || question.includes('show')) {
-    found = allFiles;
-  }
-
-  if (found.length === 0) return "No matching files found.";
-  // Return links to found files
-  return found.map(f =>
-    `<a href="${backendUrl}/uploads/${f}" target="_blank">${f.split('-').slice(1).join('-')}</a>`
-  ).join('<br>');
-}
-
-// Chat UI logic
-const chatLog = document.getElementById('chatLog');
-document.getElementById('chatForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const input = document.getElementById('chatInput');
-  const question = input.value.trim();
-  if (!question) return;
-  // Show user message
-  chatLog.innerHTML += `<div class="chat-message user">You: ${question}</div>`;
-  // Get AI answer
-  const answer = aiAnswer(question);
-  chatLog.innerHTML += `<div class="chat-message ai">AI: ${answer}</div>`;
-  chatLog.scrollTop = chatLog.scrollHeight;
-  input.value = '';
+document.addEventListener('DOMContentLoaded', function() {
+  fetchFiles();
 });
-
-// Fetch files on page load
-fetchFiles();
