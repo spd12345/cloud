@@ -1,4 +1,4 @@
-const backendUrl = 'https://cloud-dhr2.onrender.com';
+// const backendUrl = 'https://cloud-dhr2.onrender.com';
 
 // Initialize Firebase
 const firebaseConfig = {
