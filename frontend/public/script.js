@@ -24,7 +24,6 @@ function getFileType(filename) {
 }
 
 function getFileDate(filename) {
-  // Assumes filename format: timestamp-originalname.ext
   const ts = filename.split('-')[0];
   const date = new Date(Number(ts));
   return isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
@@ -37,24 +36,28 @@ document.getElementById('uploadForm').addEventListener('submit', async function 
   const file = fileInput.files[0];
   if (!file) return;
   const filename = Date.now() + '-' + file.name;
-  const storageRef = storage.ref('uploads/' + filename);
+  const storageRef = firebase.storage().ref('uploads/' + filename);
   await storageRef.put(file);
   fileInput.value = '';
   fetchFiles();
 });
 
 // List files from Firebase Storage
-async function fetchFiles() {
+function fetchFiles() {
   const listRef = storage.ref('uploads/');
-  const res = await listRef.listAll();
-  allFiles = await Promise.all(res.items.map(async itemRef => {
-    const url = await itemRef.getDownloadURL();
-    return {
-      name: itemRef.name,
-      url: url
-    };
-  }));
-  renderFiles();
+  listRef.listAll().then(async res => {
+    allFiles = await Promise.all(res.items.map(async itemRef => {
+      const url = await itemRef.getDownloadURL();
+      return {
+        name: itemRef.name,
+        url: url
+      };
+    }));
+    renderFiles();
+  }).catch(err => {
+    alert('Failed to list files: ' + err.message);
+    console.error(err);
+  });
 }
 
 // Render files with filters
@@ -101,6 +104,7 @@ function renderFiles() {
     fileList.appendChild(li);
   });
 }
+
 document.getElementById('typeFilter').addEventListener('change', renderFiles);
 document.getElementById('dateFilter').addEventListener('change', renderFiles);
 document.getElementById('clearFilters').addEventListener('click', () => {
