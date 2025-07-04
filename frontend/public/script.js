@@ -86,19 +86,6 @@ function renderFiles() {
     const card = document.createElement('div');
     card.className = 'drive-file-card' + (selectedFiles.has(file.name) ? ' selected' : '');
 
-    // Checkbox for multi-delete
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'file-checkbox';
-    checkbox.checked = selectedFiles.has(file.name);
-    checkbox.onclick = function(e) {
-      e.stopPropagation();
-      if (checkbox.checked) selectedFiles.add(file.name);
-      else selectedFiles.delete(file.name);
-      card.classList.toggle('selected', checkbox.checked);
-      document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
-    };
-
     // Delete button (top right)
     const delBtn = document.createElement('button');
     delBtn.className = 'delete-btn';
@@ -128,15 +115,13 @@ function renderFiles() {
     typeBadge.className = 'file-type-badge';
     typeBadge.textContent = getFileType(file.name).toUpperCase();
 
-    // Single click: select/deselect
+    // Single click: select/deselect (no checkbox)
     card.onclick = function(e) {
       if (selectedFiles.has(file.name)) {
         selectedFiles.delete(file.name);
-        checkbox.checked = false;
         card.classList.remove('selected');
       } else {
         selectedFiles.add(file.name);
-        checkbox.checked = true;
         card.classList.add('selected');
       }
       document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
@@ -147,7 +132,6 @@ function renderFiles() {
       window.open(file.url, '_blank');
     };
 
-    card.appendChild(checkbox);
     card.appendChild(delBtn);
     card.appendChild(nameDiv);
     card.appendChild(dateDiv);

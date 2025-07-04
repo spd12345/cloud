@@ -83,6 +83,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  user-select: none;
 }
 
 .drive-file-card.selected {
@@ -99,13 +100,6 @@ button:hover {
   color: #ff5252;
   font-size: 1.2em;
   cursor: pointer;
-  z-index: 2;
-}
-
-.drive-file-card .file-checkbox {
-  position: absolute;
-  top: 8px;
-  left: 8px;
   z-index: 2;
 }
 
