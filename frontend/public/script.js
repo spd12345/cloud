@@ -60,7 +60,9 @@ function fetchFiles() {
   });
 }
 
-// Render files with filters
+// Store selected files for deletion
+let selectedFiles = new Set();
+
 function renderFiles() {
   const type = document.getElementById('typeFilter').value;
   const date = document.getElementById('dateFilter').value;
@@ -69,41 +71,82 @@ function renderFiles() {
 
   let filtered = allFiles.filter(file => {
     let match = true;
-    if (type) {
-      match = getFileType(file.name) === type;
-    }
-    if (match && date) {
-      match = getFileDate(file.name) === date;
-    }
+    if (type) match = getFileType(file.name) === type;
+    if (match && date) match = getFileDate(file.name) === date;
     return match;
   });
 
   if (filtered.length === 0) {
-    fileList.innerHTML = '<li>No files found.</li>';
+    fileList.innerHTML = '<li class="list-group-item text-center">No files found.</li>';
+    document.getElementById('deleteSelectedBtn').style.display = 'none';
     return;
   }
 
   filtered.forEach(file => {
     const li = document.createElement('li');
+    li.className = 'list-group-item d-flex align-items-center justify-content-between flex-wrap';
+
+    // Checkbox for multi-delete
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'mr-3';
+    checkbox.checked = selectedFiles.has(file.name);
+    checkbox.onchange = function() {
+      if (checkbox.checked) selectedFiles.add(file.name);
+      else selectedFiles.delete(file.name);
+      document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
+    };
+
+    // File link
     const link = document.createElement('a');
     link.href = file.url;
     link.textContent = file.name.split('-').slice(1).join('-');
     link.target = '_blank';
+    link.className = 'mr-2';
 
+    // Date/type badges
     const dateSpan = document.createElement('span');
     const dateStr = getFileDate(file.name);
     dateSpan.textContent = dateStr ? `Uploaded: ${dateStr}` : '';
+    dateSpan.className = 'text-muted small mr-2';
 
     const typeBadge = document.createElement('span');
-    typeBadge.className = 'file-type';
+    typeBadge.className = 'badge badge-info mr-2';
     typeBadge.textContent = getFileType(file.name).toUpperCase();
 
+    // Single delete button
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-sm btn-outline-danger ml-2';
+    delBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
+    delBtn.title = 'Delete file';
+    delBtn.onclick = async function() {
+      if (confirm('Delete this file?')) {
+        await firebase.storage().ref('uploads/' + file.name).delete();
+        fetchFiles();
+      }
+    };
+
+    li.appendChild(checkbox);
     li.appendChild(link);
-    li.appendChild(dateSpan);
     li.appendChild(typeBadge);
+    li.appendChild(dateSpan);
+    li.appendChild(delBtn);
     fileList.appendChild(li);
   });
+
+  document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
 }
+
+// Multi-delete handler
+document.getElementById('deleteSelectedBtn').onclick = async function() {
+  if (selectedFiles.size === 0) return;
+  if (!confirm('Delete selected files?')) return;
+  for (const name of selectedFiles) {
+    await firebase.storage().ref('uploads/' + name).delete();
+  }
+  selectedFiles.clear();
+  fetchFiles();
+};
 
 document.getElementById('typeFilter').addEventListener('change', renderFiles);
 document.getElementById('dateFilter').addEventListener('change', renderFiles);
