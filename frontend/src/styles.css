@@ -64,3 +64,91 @@ button:hover {
 .file-item:hover {
   background-color: #f1f1f1;
 }
+
+.drive-files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.drive-file-card {
+  background: #23272b;
+  border-radius: 12px;
+  padding: 16px 12px 32px 12px;
+  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.12);
+  position: relative;
+  min-height: 120px;
+  transition: box-shadow 0.2s, border 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.drive-file-card.selected {
+  border: 2px solid #90caf9;
+  background: #1a2332;
+}
+
+.drive-file-card .delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #ff5252;
+  font-size: 1.2em;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.drive-file-card .file-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+.drive-file-card .file-type-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  background: #2196f3;
+  color: #fff;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.drive-file-card .file-date {
+  font-size: 0.8em;
+  color: #bdbdbd;
+  margin-top: 8px;
+}
+
+.drive-file-card .file-name {
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.upload-progress-container {
+  margin-bottom: 1rem;
+  display: none;
+}
+
+.upload-progress-bar {
+  width: 0%;
+  height: 8px;
+  background: #2196f3;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.upload-progress-text {
+  font-size: 0.9em;
+  color: #2196f3;
+  margin-top: 2px;
+}

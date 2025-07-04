@@ -66,8 +66,8 @@ let selectedFiles = new Set();
 function renderFiles() {
   const type = document.getElementById('typeFilter').value;
   const date = document.getElementById('dateFilter').value;
-  const fileList = document.getElementById('fileList');
-  fileList.innerHTML = '';
+  const fileGrid = document.getElementById('fileGrid');
+  fileGrid.innerHTML = '';
 
   let filtered = allFiles.filter(file => {
     let match = true;
@@ -77,49 +77,32 @@ function renderFiles() {
   });
 
   if (filtered.length === 0) {
-    fileList.innerHTML = '<li class="list-group-item text-center">No files found.</li>';
+    fileGrid.innerHTML = '<div class="text-center text-muted">No files found.</div>';
     document.getElementById('deleteSelectedBtn').style.display = 'none';
     return;
   }
 
   filtered.forEach(file => {
-    const li = document.createElement('li');
-    li.className = 'list-group-item d-flex align-items-center justify-content-between flex-wrap';
-    li.style.cursor = 'pointer';
+    const card = document.createElement('div');
+    card.className = 'drive-file-card' + (selectedFiles.has(file.name) ? ' selected' : '');
 
     // Checkbox for multi-delete
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.className = 'mr-3';
+    checkbox.className = 'file-checkbox';
     checkbox.checked = selectedFiles.has(file.name);
     checkbox.onclick = function(e) {
-      // Prevent li click event
       e.stopPropagation();
       if (checkbox.checked) selectedFiles.add(file.name);
       else selectedFiles.delete(file.name);
+      card.classList.toggle('selected', checkbox.checked);
       document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
-      li.classList.toggle('active', checkbox.checked);
     };
 
-    // File link (for display only)
-    const link = document.createElement('span');
-    link.textContent = file.name.split('-').slice(1).join('-');
-    link.className = 'mr-2 text-primary';
-
-    // Date/type badges
-    const dateSpan = document.createElement('span');
-    const dateStr = getFileDate(file.name);
-    dateSpan.textContent = dateStr ? `Uploaded: ${dateStr}` : '';
-    dateSpan.className = 'text-muted small mr-2';
-
-    const typeBadge = document.createElement('span');
-    typeBadge.className = 'badge badge-info mr-2';
-    typeBadge.textContent = getFileType(file.name).toUpperCase();
-
-    // Single delete button
+    // Delete button (top right)
     const delBtn = document.createElement('button');
-    delBtn.className = 'btn btn-sm btn-outline-danger ml-2';
-    delBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
+    delBtn.className = 'delete-btn';
+    delBtn.innerHTML = '&times;';
     delBtn.title = 'Delete file';
     delBtn.onclick = async function(e) {
       e.stopPropagation();
@@ -129,34 +112,47 @@ function renderFiles() {
       }
     };
 
+    // File name
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'file-name';
+    nameDiv.textContent = file.name.split('-').slice(1).join('-');
+
+    // Date
+    const dateDiv = document.createElement('div');
+    const dateStr = getFileDate(file.name);
+    dateDiv.className = 'file-date';
+    dateDiv.textContent = dateStr ? `Uploaded: ${dateStr}` : '';
+
+    // File type badge (bottom right)
+    const typeBadge = document.createElement('span');
+    typeBadge.className = 'file-type-badge';
+    typeBadge.textContent = getFileType(file.name).toUpperCase();
+
     // Single click: select/deselect
-    li.onclick = function(e) {
+    card.onclick = function(e) {
       if (selectedFiles.has(file.name)) {
         selectedFiles.delete(file.name);
         checkbox.checked = false;
-        li.classList.remove('active');
+        card.classList.remove('selected');
       } else {
         selectedFiles.add(file.name);
         checkbox.checked = true;
-        li.classList.add('active');
+        card.classList.add('selected');
       }
       document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
     };
 
     // Double click: open file
-    li.ondblclick = function(e) {
+    card.ondblclick = function(e) {
       window.open(file.url, '_blank');
     };
 
-    // Highlight if selected
-    if (selectedFiles.has(file.name)) li.classList.add('active');
-
-    li.appendChild(checkbox);
-    li.appendChild(link);
-    li.appendChild(typeBadge);
-    li.appendChild(dateSpan);
-    li.appendChild(delBtn);
-    fileList.appendChild(li);
+    card.appendChild(checkbox);
+    card.appendChild(delBtn);
+    card.appendChild(nameDiv);
+    card.appendChild(dateDiv);
+    card.appendChild(typeBadge);
+    fileGrid.appendChild(card);
   });
 
   document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
@@ -211,4 +207,49 @@ auth.onAuthStateChanged(user => {
     document.getElementById('loginPage').style.display = '';
     document.getElementById('mainApp').style.display = 'none';
   }
+});
+
+// --- Upload progress animation ---
+const uploadProgressContainer = document.createElement('div');
+uploadProgressContainer.className = 'upload-progress-container';
+uploadProgressContainer.innerHTML = `
+  <div class="upload-progress-bar" id="uploadProgressBar"></div>
+  <div class="upload-progress-text" id="uploadProgressText"></div>
+`;
+document.getElementById('uploadForm').insertAdjacentElement('afterend', uploadProgressContainer);
+
+document.getElementById('uploadForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  if (!file) return;
+  const filename = Date.now() + '-' + file.name;
+  const storageRef = firebase.storage().ref('uploads/' + filename);
+
+  // Show progress bar
+  uploadProgressContainer.style.display = 'block';
+  const progressBar = document.getElementById('uploadProgressBar');
+  const progressText = document.getElementById('uploadProgressText');
+  progressBar.style.width = '0%';
+  progressText.textContent = 'Uploading... 0%';
+
+  const uploadTask = storageRef.put(file);
+  uploadTask.on('state_changed',
+    function progress(snapshot) {
+      const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+      progressBar.style.width = percent + '%';
+      progressText.textContent = `Uploading... ${percent}%`;
+    },
+    function error(err) {
+      progressText.textContent = 'Upload failed: ' + err.message;
+      setTimeout(() => uploadProgressContainer.style.display = 'none', 3000);
+    },
+    function complete() {
+      progressBar.style.width = '100%';
+      progressText.textContent = 'Upload complete!';
+      setTimeout(() => uploadProgressContainer.style.display = 'none', 1000);
+      fileInput.value = '';
+      fetchFiles();
+    }
+  );
 });
