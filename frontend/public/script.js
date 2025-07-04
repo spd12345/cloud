@@ -113,6 +113,45 @@ document.getElementById('clearFilters').addEventListener('click', () => {
   renderFiles();
 });
 
+// Auth logic
+const auth = firebase.auth();
+
+document.getElementById('loginBtn').onclick = function() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => alert('Login failed: ' + err.message));
+};
+
+document.getElementById('logoutBtn').onclick = function() {
+  auth.signOut();
+};
+
+auth.onAuthStateChanged(user => {
+  const uploadForm = document.getElementById('uploadForm');
+  const filters = document.querySelector('.filters');
+  const userInfo = document.getElementById('userInfo');
+  if (user) {
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = '';
+    document.getElementById('email').style.display = 'none';
+    document.getElementById('password').style.display = 'none';
+    userInfo.textContent = `Logged in as: ${user.email}`;
+    uploadForm.style.display = '';
+    filters.style.display = '';
+    fetchFiles();
+  } else {
+    document.getElementById('loginBtn').style.display = '';
+    document.getElementById('logoutBtn').style.display = 'none';
+    document.getElementById('email').style.display = '';
+    document.getElementById('password').style.display = '';
+    userInfo.textContent = '';
+    uploadForm.style.display = 'none';
+    filters.style.display = 'none';
+    document.getElementById('fileList').innerHTML = '<li>Please log in to view files.</li>';
+  }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
   fetchFiles();
 });
