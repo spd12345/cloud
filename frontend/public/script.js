@@ -120,38 +120,27 @@ document.getElementById('loginBtn').onclick = function() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   auth.signInWithEmailAndPassword(email, password)
-    .catch(err => alert('Login failed: ' + err.message));
+    .catch(err => {
+      document.getElementById('loginError').textContent = err.message;
+    });
 };
 
 document.getElementById('logoutBtn').onclick = function() {
   auth.signOut();
+  // Clear login fields on logout
+  document.getElementById('email').value = '';
+  document.getElementById('password').value = '';
+  document.getElementById('loginError').textContent = '';
 };
 
 auth.onAuthStateChanged(user => {
-  const uploadForm = document.getElementById('uploadForm');
-  const filters = document.querySelector('.filters');
-  const userInfo = document.getElementById('userInfo');
   if (user) {
-    document.getElementById('loginBtn').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = '';
-    document.getElementById('email').style.display = 'none';
-    document.getElementById('password').style.display = 'none';
-    userInfo.textContent = `Logged in as: ${user.email}`;
-    uploadForm.style.display = '';
-    filters.style.display = '';
-    fetchFiles();
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = '';
+    document.getElementById('userInfo').textContent = `Logged in as: ${user.email}`;
+    fetchFiles(); // Only fetch files after login
   } else {
-    document.getElementById('loginBtn').style.display = '';
-    document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('email').style.display = '';
-    document.getElementById('password').style.display = '';
-    userInfo.textContent = '';
-    uploadForm.style.display = 'none';
-    filters.style.display = 'none';
-    document.getElementById('fileList').innerHTML = '<li>Please log in to view files.</li>';
+    document.getElementById('loginPage').style.display = '';
+    document.getElementById('mainApp').style.display = 'none';
   }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  fetchFiles();
 });
