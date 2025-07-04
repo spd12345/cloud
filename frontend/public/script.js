@@ -119,10 +119,10 @@ function renderFiles() {
     card.onclick = function(e) {
       if (selectedFiles.has(file.name)) {
         selectedFiles.delete(file.name);
-        card.classList.remove('selected');
+        card.classList.remove('selected'); // on deselect
       } else {
         selectedFiles.add(file.name);
-        card.classList.add('selected');
+        card.classList.add('selected'); // on select
       }
       document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
     };
@@ -164,14 +164,26 @@ document.getElementById('clearFilters').addEventListener('click', () => {
 // Auth logic
 const auth = firebase.auth();
 
-document.getElementById('loginBtn').onclick = function() {
+function tryLogin() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   auth.signInWithEmailAndPassword(email, password)
     .catch(err => {
       document.getElementById('loginError').textContent = err.message;
     });
-};
+}
+
+document.getElementById('loginBtn').onclick = tryLogin;
+
+// Allow Enter key to trigger login
+['email', 'password'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      tryLogin();
+    }
+  });
+});
 
 document.getElementById('logoutBtn').onclick = function() {
   auth.signOut();
