@@ -1,5 +1,18 @@
 const backendUrl = 'https://cloud-dhr2.onrender.com';
 
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAeU7MrJPQzF8nmDERSl2vEFt4i-tfkzgE",
+  authDomain: "student-id-27a57.firebaseapp.com",
+  databaseURL: "https://student-id-27a57.firebaseio.com",
+  projectId: "student-id-27a57",
+  storageBucket: "student-id-27a57.appspot.com",
+  messagingSenderId: "433391875124",
+  appId: "1:433391875124:web:3a6819c4bc85d677efc661"
+};
+firebase.initializeApp(firebaseConfig);
+const storage = firebase.storage();
+
 let allFiles = [];
 
 function getFileType(filename) {
@@ -17,12 +30,34 @@ function getFileDate(filename) {
   return isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }
 
+// Upload file to Firebase Storage
+document.getElementById('uploadForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  if (!file) return;
+  const filename = Date.now() + '-' + file.name;
+  const storageRef = storage.ref('uploads/' + filename);
+  await storageRef.put(file);
+  fileInput.value = '';
+  fetchFiles();
+});
+
+// List files from Firebase Storage
 async function fetchFiles() {
-  const res = await fetch(`${backendUrl}/files`);
-  allFiles = await res.json();
+  const listRef = storage.ref('uploads/');
+  const res = await listRef.listAll();
+  allFiles = await Promise.all(res.items.map(async itemRef => {
+    const url = await itemRef.getDownloadURL();
+    return {
+      name: itemRef.name,
+      url: url
+    };
+  }));
   renderFiles();
 }
 
+// Render files with filters
 function renderFiles() {
   const type = document.getElementById('typeFilter').value;
   const date = document.getElementById('dateFilter').value;
@@ -32,10 +67,10 @@ function renderFiles() {
   let filtered = allFiles.filter(file => {
     let match = true;
     if (type) {
-      match = getFileType(file) === type;
+      match = getFileType(file.name) === type;
     }
     if (match && date) {
-      match = getFileDate(file) === date;
+      match = getFileDate(file.name) === date;
     }
     return match;
   });
@@ -48,17 +83,17 @@ function renderFiles() {
   filtered.forEach(file => {
     const li = document.createElement('li');
     const link = document.createElement('a');
-    link.href = `${backendUrl}/uploads/${file}`;
-    link.textContent = file.split('-').slice(1).join('-'); // Show original name
+    link.href = file.url;
+    link.textContent = file.name.split('-').slice(1).join('-');
     link.target = '_blank';
 
     const dateSpan = document.createElement('span');
-    const dateStr = getFileDate(file);
+    const dateStr = getFileDate(file.name);
     dateSpan.textContent = dateStr ? `Uploaded: ${dateStr}` : '';
 
     const typeBadge = document.createElement('span');
     typeBadge.className = 'file-type';
-    typeBadge.textContent = getFileType(file).toUpperCase();
+    typeBadge.textContent = getFileType(file.name).toUpperCase();
 
     li.appendChild(link);
     li.appendChild(dateSpan);
@@ -66,20 +101,6 @@ function renderFiles() {
     fileList.appendChild(li);
   });
 }
-
-document.getElementById('uploadForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const fileInput = document.getElementById('fileInput');
-  const formData = new FormData();
-  formData.append('file', fileInput.files[0]);
-  await fetch(`${backendUrl}/upload`, {
-    method: 'POST',
-    body: formData
-  });
-  fileInput.value = '';
-  fetchFiles();
-});
-
 document.getElementById('typeFilter').addEventListener('change', renderFiles);
 document.getElementById('dateFilter').addEventListener('change', renderFiles);
 document.getElementById('clearFilters').addEventListener('click', () => {
