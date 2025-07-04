@@ -180,6 +180,10 @@ ul#fileList li .file-type {
   border-radius: 6px;
   font-weight: 500;
 }
+.list-group-item.active {
+  background-color: #e3f0fd;
+  border-color: #90caf9;
+}
 @media (max-width: 700px) {
   .container {
     padding: 18px 4vw;

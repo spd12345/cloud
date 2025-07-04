@@ -85,24 +85,26 @@ function renderFiles() {
   filtered.forEach(file => {
     const li = document.createElement('li');
     li.className = 'list-group-item d-flex align-items-center justify-content-between flex-wrap';
+    li.style.cursor = 'pointer';
 
     // Checkbox for multi-delete
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'mr-3';
     checkbox.checked = selectedFiles.has(file.name);
-    checkbox.onchange = function() {
+    checkbox.onclick = function(e) {
+      // Prevent li click event
+      e.stopPropagation();
       if (checkbox.checked) selectedFiles.add(file.name);
       else selectedFiles.delete(file.name);
       document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
+      li.classList.toggle('active', checkbox.checked);
     };
 
-    // File link
-    const link = document.createElement('a');
-    link.href = file.url;
+    // File link (for display only)
+    const link = document.createElement('span');
     link.textContent = file.name.split('-').slice(1).join('-');
-    link.target = '_blank';
-    link.className = 'mr-2';
+    link.className = 'mr-2 text-primary';
 
     // Date/type badges
     const dateSpan = document.createElement('span');
@@ -119,12 +121,35 @@ function renderFiles() {
     delBtn.className = 'btn btn-sm btn-outline-danger ml-2';
     delBtn.innerHTML = '<span aria-hidden="true">&times;</span>';
     delBtn.title = 'Delete file';
-    delBtn.onclick = async function() {
+    delBtn.onclick = async function(e) {
+      e.stopPropagation();
       if (confirm('Delete this file?')) {
         await firebase.storage().ref('uploads/' + file.name).delete();
         fetchFiles();
       }
     };
+
+    // Single click: select/deselect
+    li.onclick = function(e) {
+      if (selectedFiles.has(file.name)) {
+        selectedFiles.delete(file.name);
+        checkbox.checked = false;
+        li.classList.remove('active');
+      } else {
+        selectedFiles.add(file.name);
+        checkbox.checked = true;
+        li.classList.add('active');
+      }
+      document.getElementById('deleteSelectedBtn').style.display = selectedFiles.size > 0 ? '' : 'none';
+    };
+
+    // Double click: open file
+    li.ondblclick = function(e) {
+      window.open(file.url, '_blank');
+    };
+
+    // Highlight if selected
+    if (selectedFiles.has(file.name)) li.classList.add('active');
 
     li.appendChild(checkbox);
     li.appendChild(link);
